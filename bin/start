@@ -1,0 +1,167 @@
+#!/usr/bin/env node
+
+require('dotenv').config();
+
+const binance = require('node-binance-api');
+const AWS = require('aws-sdk');
+
+
+const BINANCE_KEY = process.env.BINANCE_KEY;
+const BINANCE_SECRET = process.env.BINANCE_SECRET;
+
+const AWS_REGION = process.env.AWS_REGION;
+const AWS_KEY_ID = process.env.AWS_KEY_ID;
+const AWS_ACCESS_KEY = process.env.AWS_ACCESS_KEY;
+
+const PHONE_NUMBER = process.env.PHONE_NUMBER;
+
+const DEFAULT_MARGIN = 0.004;
+
+const MARGINS = {
+	XRPBTC: 0.004,
+	XVGBTC: 0.02
+}
+
+const getNewPrice = ({price, symbol, isSell}) => {
+	const newPrice = roundTo(price * (1 + (isSell ? 1 : -1) * (MARGINS[symbol] || DEFAULT_MARGIN)), 8, isSell ? 'ceil' : 'floor');
+	console.log("NEW PRICE!", newPrice);
+	return newPrice;
+}
+	
+	
+
+function roundTo(n, digits, type) {
+	var negative = false;
+	if (digits === undefined) {
+			digits = 0;
+	}
+			if( n < 0) {
+			negative = true;
+		n = n * -1;
+	}
+	var multiplicator = Math.pow(10, digits);
+	n = parseFloat((n * multiplicator).toFixed(11));
+	n = (Math[type](n) / multiplicator).toFixed(8);
+	if( negative ) {    
+			n = (n * -1).toFixed(8);
+	}
+	return n;
+}
+
+const getBalance = ({symbol}) =>
+	console.log("GETTING BALANCE FOR ", symbol) ||
+	new Promise((resolve, reject) => 
+		binance.balance((error, balances) => 
+			!!error ? (
+				!!error[symbol] ? (
+					resolve(parseFloat(error[symbol].available))
+				) : (
+					reject(error)
+				)
+			) : (
+				console.log("BALANCEs", balances[symbol].available) ||
+				resolve(parseFloat(balances[symbol].available))
+			)
+		)
+	)
+
+const extractTargetTickerFromSymbol = symbol =>
+	symbol.substr(0, 3)
+
+const extractSourceTickerFromSymbol = symbol =>
+	symbol.substr(3)
+
+
+const buy = ({price, quantity, symbol}) =>
+	console.log("BUY!!!", price, quantity, symbol) ||
+	new Promise((resolve, reject) => 
+		setTimeout(() =>
+			getBalance({symbol: extractSourceTickerFromSymbol(symbol)})
+				.then(balance =>
+					console.log("BUY BALANCE ", balance, quantity) ||
+					balance < 0.00005602 ? Promise.resolve(null) :
+					binance.buy(symbol, quantity, price, {type:'LIMIT'}, (error, response) => 
+						!!error ? reject(error) : (
+							resolve(response)
+						)
+					)
+				)
+				.catch(err => console.log("HOWWER", err))
+		, 2000)
+	)
+
+const sell = ({price, quantity, symbol}) =>
+	console.log("SELL!!!", price, quantity, symbol) ||
+	new Promise((resolve, reject) => 
+		setTimeout(() => 
+			getBalance({symbol: extractTargetTickerFromSymbol(symbol)})
+				.then(balance =>
+					console.log("SELL BALANCE ", balance, quantity)	 ||
+					balance < 11 ? Promise.resolve(null) : 
+					binance.sell(symbol, quantity > balance ? balance - 1 : quantity, price, {type:'LIMIT'}, (error, response) => 
+						!!error ? reject(error) : (
+							resolve(response)
+						)
+				)
+			)
+			.catch(console.log)
+			, 2000)
+	)
+	
+
+const sendNotification = ({message}) =>
+	console.log("MESSAGE", message) ||
+	(new AWS.SNS({
+	region: AWS_REGION,
+	accessKeyId: AWS_KEY_ID,
+	secretAccessKey: AWS_ACCESS_KEY
+})).publish({
+		Message: message,
+		MessageStructure: 'string',
+		PhoneNumber: PHONE_NUMBER,
+		Subject: 'Order Alert'
+	})
+		.promise()
+
+const handleUpdate = ({ x: executionType, s: symbol, p: price, l: quantity, S: side, o: orderType, i: orderId, X: orderStatus }) =>
+	console.log("GOT AN UPDATE!", price) ||
+	Promise.all([
+		sendNotification({message: executionType + ' ' + symbol + ' ' + side + ' ' + orderType + ' ' + price + ' ' + quantity}),
+		executionType !== "TRADE" ? ( ///Ignore everything other than trades
+			Promise.resolve(null) 
+		) : side === "BUY" ? ( //// if it was a buy order, create a sell order for <MARGIN> higher
+			sell({price: getNewPrice({price: price, symbol: symbol, isSell: true}), quantity: quantity, symbol: symbol})
+				.catch(err => console.log("Sell error", err))
+		) : side === "SELL" ? ( //// if it was a sell order, create a buy order for <MARGIN> lower
+			buy({price: getNewPrice({price: price, symbol: symbol, isSell: false}), quantity: quantity, symbol: symbol})
+				.catch(err => console.log("Buy error", err))
+		) : (
+			Promise.resolve(null)
+		)
+		
+	])
+		.then(console.log)
+		.catch(console.log)
+		
+
+binance.options({
+	'APIKEY': BINANCE_KEY,
+	'APISECRET': BINANCE_SECRET
+});
+
+AWS.config.update({
+	region: AWS_REGION,
+	accessKeyId: AWS_KEY_ID,
+	secretAccessKey: AWS_ACCESS_KEY
+});
+
+binance.websockets.userData(() => null, resp => console.log(resp) || handleUpdate(resp));
+
+// router.get('/', function (req, res, next) {
+
+// 	console.log("OK OK OK OK")
+
+// 	binance.websockets.userData(() => null, resp => console.log(resp) || handleUpdate(resp));
+// });
+
+// module.exports = router;

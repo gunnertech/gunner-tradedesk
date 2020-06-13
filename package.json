@@ -1,0 +1,12 @@
+{
+  "name": "gunner-tradedesk",
+  "version": "0.0.2",
+  "scripts": {
+    "start": "node ./bin/start"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.696.0",
+    "dotenv": "^8.2.0",
+    "node-binance-api": "^0.3.4"
+  }
+}
