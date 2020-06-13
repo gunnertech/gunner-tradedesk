@@ -155,13 +155,6 @@ AWS.config.update({
 	secretAccessKey: AWS_ACCESS_KEY
 });
 
+console.log("Connecting....")
+
 binance.websockets.userData(() => null, resp => console.log(resp) || handleUpdate(resp));
-
-// router.get('/', function (req, res, next) {
-
-// 	console.log("OK OK OK OK")
-
-// 	binance.websockets.userData(() => null, resp => console.log(resp) || handleUpdate(resp));
-// });
-
-// module.exports = router;
