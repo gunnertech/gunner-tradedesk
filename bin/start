@@ -93,7 +93,7 @@ const buy = ({price, quantity, symbol}) =>
 	(new Promise((resolve, reject) => 
     getBalance({symbol: extractSourceTickerFromSymbol(symbol)})
       .then(balance =>
-        console.log("BUYING", getBuyQuantity({balance, quantity})) ||
+        console.log("BUYING", getBuyQuantity({balance, quantity}), " at ", price) ||
         binance.buy(symbol, getBuyQuantity({balance, quantity}), price, { type:'LIMIT' }, (error, response) => 
           !!error ? reject(error) : (
             resolve(response)
@@ -109,7 +109,7 @@ const sell = ({price, quantity, symbol}) =>
 	(new Promise((resolve, reject) => 
     getBalance({symbol: extractTargetTickerFromSymbol(symbol)})
       .then(balance =>
-        console.log("SELLING", getSellQuantity({balance, quantity})) || 
+        console.log("SELLING", getSellQuantity({balance, quantity}), " at ", price) || 
         binance.sell(symbol, getSellQuantity({balance, quantity})), price, {type:'LIMIT'}, (error, response) => 
           !!error ? reject(error) : (
             resolve(response)
