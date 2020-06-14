@@ -87,28 +87,27 @@ const extractSourceTickerFromSymbol = symbol =>
 	// symbol.substr(3)
 
 const getSellQuantity = ({balance, quantity}) =>
-  quantity
-  // quantity <= balance ? (
-  //   quantity
-  // ) : (
-  //   parseFloat(balance * 0.99).toFixed(8)
-  // )
+  quantity < balance ? (
+    quantity
+  ) : (
+    parseFloat(balance * 0.99).toFixed(6)
+  )
 
-const getBuyQuantity = ({balance, quantity}) =>
-  quantity
-  // quantity <= balance ? (
-  //   quantity
-  // ) : (
-  //   parseFloat(balance * 0.99).toFixed(8)
-  // )
+const getBuyQuantity = ({balance, quantity, price}) =>
+  price * quantity >= balance ? (
+    parseFloat(balance * 0.99 / price).toFixed(6)
+  ) : (
+    quantity
+  )
+  
 
 const buy = ({price, quantity, symbol}) =>
 	console.log("BUY!!!", price, quantity, symbol) ||
 	(new Promise((resolve, reject) => 
-    getBalance({symbol: extractSourceTickerFromSymbol(symbol)})
+    getBalance({symbol: extractTargetTickerFromSymbol(symbol)})
       .then(balance =>
-        console.log("BUYING", getBuyQuantity({balance, quantity}), " at ", price) ||
-        binance.buy(symbol, getBuyQuantity({balance, quantity}), price, { type:'LIMIT' }, (error, response) => 
+        console.log("BUYING", getBuyQuantity({balance, quantity, price}), " at ", price) ||
+        binance.buy(symbol, getBuyQuantity({balance, quantity, price}), price, { type:'LIMIT' }, (error, response) => 
           !!error ? reject(error) : (
             resolve(response)
           )
@@ -121,7 +120,7 @@ const buy = ({price, quantity, symbol}) =>
 const sell = ({price, quantity, symbol}) =>
 	console.log("SELL!!!", price, quantity, symbol) ||
 	(new Promise((resolve, reject) => 
-    getBalance({symbol: extractTargetTickerFromSymbol(symbol)})
+    getBalance({symbol: extractSourceTickerFromSymbol(symbol)})
       .then(balance =>
         console.log("SELLING", getSellQuantity({balance, quantity}), " at ", price) || 
         binance.sell(symbol, getSellQuantity({balance, quantity}), price, {type:'LIMIT'}, (error, response) => 
