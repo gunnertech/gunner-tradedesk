@@ -135,11 +135,27 @@ const sendNotification = ({message}) =>
 	})
 		.promise()
 
-const handleUpdate = ({ x: executionType, s: symbol, p: price, l: quantity, S: side, o: orderType, i: orderId, X: orderStatus }) =>
-	console.log("GOT AN UPDATE!", price) ||
+const handleUpdate = ({ 
+  x: executionType, 
+  s: symbol, 
+  p: price, 
+  q: quantity, 
+  l: quantityJustFilled,
+  S: side, 
+  o: orderType, 
+  i: orderId, 
+  X: orderStatus 
+}) =>
 	Promise.all([
-		sendNotification({message: executionType + ' ' + symbol + ' ' + side + ' ' + orderType + ' ' + price + ' ' + quantity}),
-		executionType !== "TRADE" ? ( ///Ignore everything other than trades
+    executionType !== "TRADE" &&
+    orderStatus === 'FILLED'
+    ? ( ///Ignore everything other than trades
+      Promise.resolve(null) 
+    ) : (
+      sendNotification({message: executionType + ' ' + symbol + ' ' + side + ' ' + orderType + ' ' + price + ' ' + quantity})
+    ),
+    executionType !== "TRADE" &&
+    orderStatus === 'FILLED' ? ( ///Ignore everything other than trades
 			Promise.resolve(null) 
 		) : side === "BUY" ? ( //// if it was a buy order, create a sell order for <MARGIN> higher
 			sell({price: getNewPrice({price: price, symbol: symbol, isSell: true}), quantity: quantity, symbol: symbol})
