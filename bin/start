@@ -110,10 +110,11 @@ const sell = ({price, quantity, symbol}) =>
     getBalance({symbol: extractTargetTickerFromSymbol(symbol)})
       .then(balance =>
         console.log("SELLING", getSellQuantity({balance, quantity}), " at ", price) || 
-        binance.sell(symbol, getSellQuantity({balance, quantity})), price, {type:'LIMIT'}, (error, response) => 
+        binance.sell(symbol, getSellQuantity({balance, quantity}), price, {type:'LIMIT'}, (error, response) => 
           !!error ? reject(error) : (
             resolve(response)
           )
+        )
       )
   ))
     .then(err => console.log("RESP", err))
