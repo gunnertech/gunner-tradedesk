@@ -82,11 +82,12 @@ const getSellQuantity = ({balance, quantity}) =>
   )
 
 const getBuyQuantity = ({balance, quantity}) =>
-  quantity <= balance ? (
-    quantity
-  ) : (
-    parseFloat(balance * 0.99).toFixed(8)
-  )
+  quantity
+  // quantity <= balance ? (
+  //   quantity
+  // ) : (
+  //   parseFloat(balance * 0.99).toFixed(8)
+  // )
 
 const buy = ({price, quantity, symbol}) =>
 	console.log("BUY!!!", price, quantity, symbol) ||
