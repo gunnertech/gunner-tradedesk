@@ -75,11 +75,12 @@ const extractSourceTickerFromSymbol = symbol =>
 	// symbol.substr(3)
 
 const getSellQuantity = ({balance, quantity}) =>
-  quantity <= balance ? (
-    quantity
-  ) : (
-    parseFloat(balance * 0.99).toFixed(8)
-  )
+  quantity
+  // quantity <= balance ? (
+  //   quantity
+  // ) : (
+  //   parseFloat(balance * 0.99).toFixed(8)
+  // )
 
 const getBuyQuantity = ({balance, quantity}) =>
   quantity
