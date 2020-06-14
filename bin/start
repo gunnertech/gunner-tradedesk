@@ -90,39 +90,34 @@ const getBuyQuantity = ({balance, quantity}) =>
 
 const buy = ({price, quantity, symbol}) =>
 	console.log("BUY!!!", price, quantity, symbol) ||
-	new Promise((resolve, reject) => 
-		setTimeout(() =>
-			getBalance({symbol: extractSourceTickerFromSymbol(symbol)})
-				.then(balance =>
-					console.log("BUYING", getBuyQuantity({balance, quantity})) ||
-					binance.buy(symbol, getBuyQuantity({balance, quantity}), price, { type:'LIMIT' }, (error, response) => 
-						!!error ? reject(error) : (
-							resolve(response)
-						)
-					)
+	(new Promise((resolve, reject) => 
+    getBalance({symbol: extractSourceTickerFromSymbol(symbol)})
+      .then(balance =>
+        console.log("BUYING", getBuyQuantity({balance, quantity})) ||
+        binance.buy(symbol, getBuyQuantity({balance, quantity}), price, { type:'LIMIT' }, (error, response) => 
+          !!error ? reject(error) : (
+            resolve(response)
+          )
         )
-        .then(err => console.log("RESP", err))
-				.catch(err => console.log("ERR", err))
-		, 2000)
-	)
+      )
+  ))
+    .then(err => console.log("RESP", err))
+		.catch(err => console.log("ERR", err))
 
 const sell = ({price, quantity, symbol}) =>
 	console.log("SELL!!!", price, quantity, symbol) ||
-	new Promise((resolve, reject) => 
-		setTimeout(() => 
-			getBalance({symbol: extractTargetTickerFromSymbol(symbol)})
-				.then(balance =>
-					console.log("SELLING", getSellQuantity({balance, quantity})) || 
-					binance.sell(symbol, getSellQuantity({balance, quantity})), price, {type:'LIMIT'}, (error, response) => 
-						!!error ? reject(error) : (
-							resolve(response)
-						)
-				)
-			)
-			.then(err => console.log("RESP", err))
-			.catch(err => console.log("ERR", err))
-			, 2000)
-	)
+	(new Promise((resolve, reject) => 
+    getBalance({symbol: extractTargetTickerFromSymbol(symbol)})
+      .then(balance =>
+        console.log("SELLING", getSellQuantity({balance, quantity})) || 
+        binance.sell(symbol, getSellQuantity({balance, quantity})), price, {type:'LIMIT'}, (error, response) => 
+          !!error ? reject(error) : (
+            resolve(response)
+          )
+      )
+  ))
+    .then(err => console.log("RESP", err))
+    .catch(err => console.log("ERR", err))
 	
 
 const sendNotification = ({message}) =>
