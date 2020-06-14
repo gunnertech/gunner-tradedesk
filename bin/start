@@ -146,18 +146,12 @@ const handleUpdate = ({
   i: orderId, 
   X: orderStatus 
 }) =>
+  executionType === "TRADE" &&
+  orderStatus === 'FILLED' &&
 	Promise.all([
-    executionType !== "TRADE" &&
-    orderStatus === 'FILLED'
-    ? ( ///Ignore everything other than trades
-      Promise.resolve(null) 
-    ) : (
-      sendNotification({message: executionType + ' ' + symbol + ' ' + side + ' ' + orderType + ' ' + price + ' ' + quantity})
-    ),
-    executionType !== "TRADE" &&
-    orderStatus === 'FILLED' ? ( ///Ignore everything other than trades
-			Promise.resolve(null) 
-		) : side === "BUY" ? ( //// if it was a buy order, create a sell order for <MARGIN> higher
+    sendNotification({message: executionType + ' ' + symbol + ' ' + side + ' ' + orderType + ' ' + price + ' ' + quantity})
+    ,
+    side === "BUY" ? ( //// if it was a buy order, create a sell order for <MARGIN> higher
 			sell({price: getNewPrice({price: price, symbol: symbol, isSell: true}), quantity: quantity, symbol: symbol})
 				.catch(err => console.log("Sell error", err))
 		) : side === "SELL" ? ( //// if it was a sell order, create a buy order for <MARGIN> lower
@@ -166,7 +160,6 @@ const handleUpdate = ({
 		) : (
 			Promise.resolve(null)
 		)
-		
 	])
 		.then(console.log)
 		.catch(console.log)
