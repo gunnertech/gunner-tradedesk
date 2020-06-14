@@ -6,6 +6,7 @@ const binance = require('node-binance-api');
 const AWS = require('aws-sdk');
 
 
+const DENOMINATOR = process.env.DENOMINATOR || "BTC";
 const BINANCE_KEY = process.env.BINANCE_KEY;
 const BINANCE_SECRET = process.env.BINANCE_SECRET;
 
@@ -66,11 +67,26 @@ const getBalance = ({symbol}) =>
 	)
 
 const extractTargetTickerFromSymbol = symbol =>
-	symbol.substr(0, 3)
+  DENOMINATOR
+	// symbol.substr(0, 3)
 
 const extractSourceTickerFromSymbol = symbol =>
-	symbol.substr(3)
+  symbol.replace(DENOMINATOR, "")
+	// symbol.substr(3)
 
+const getSellQuantity = ({balance, quantity}) =>
+  quantity <= balance ? (
+    quantity
+  ) : (
+    parseFloat(balance * 0.99).toFixed(8)
+  )
+
+const getBuyQuantity = ({balance, quantity}) =>
+  quantity <= balance ? (
+    quantity
+  ) : (
+    parseFloat(balance * 0.99).toFixed(8)
+  )
 
 const buy = ({price, quantity, symbol}) =>
 	console.log("BUY!!!", price, quantity, symbol) ||
@@ -78,15 +94,15 @@ const buy = ({price, quantity, symbol}) =>
 		setTimeout(() =>
 			getBalance({symbol: extractSourceTickerFromSymbol(symbol)})
 				.then(balance =>
-					console.log("BUY BALANCE ", balance, quantity) ||
-					balance < 0.00005602 ? Promise.resolve(null) :
-					binance.buy(symbol, quantity, price, {type:'LIMIT'}, (error, response) => 
+					console.log("BUYING", getBuyQuantity({balance, quantity})) ||
+					binance.buy(symbol, getBuyQuantity({balance, quantity}), price, { type:'LIMIT' }, (error, response) => 
 						!!error ? reject(error) : (
 							resolve(response)
 						)
 					)
-				)
-				.catch(err => console.log("HOWWER", err))
+        )
+        .then(err => console.log("RESP", err))
+				.catch(err => console.log("ERR", err))
 		, 2000)
 	)
 
@@ -96,15 +112,15 @@ const sell = ({price, quantity, symbol}) =>
 		setTimeout(() => 
 			getBalance({symbol: extractTargetTickerFromSymbol(symbol)})
 				.then(balance =>
-					console.log("SELL BALANCE ", balance, quantity)	 ||
-					balance < 11 ? Promise.resolve(null) : 
-					binance.sell(symbol, quantity > balance ? balance - 1 : quantity, price, {type:'LIMIT'}, (error, response) => 
+					console.log("SELLING", getSellQuantity({balance, quantity})) || 
+					binance.sell(symbol, getSellQuantity({balance, quantity})), price, {type:'LIMIT'}, (error, response) => 
 						!!error ? reject(error) : (
 							resolve(response)
 						)
 				)
 			)
-			.catch(console.log)
+			.then(err => console.log("RESP", err))
+			.catch(err => console.log("ERR", err))
 			, 2000)
 	)
 	
