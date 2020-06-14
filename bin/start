@@ -23,8 +23,20 @@ const MARGINS = {
 	XVGBTC: 0.02
 }
 
+const DECIMAL_PLACES = {
+  ETHBTC: 6
+}
+
+const getDecimalPlaces = ticker =>
+  DECIMAL_PLACES[ticker] || 8
+
 const getNewPrice = ({price, symbol, isSell}) => {
-	const newPrice = roundTo(price * (1 + (isSell ? 1 : -1) * (MARGINS[symbol] || DEFAULT_MARGIN)), 8, isSell ? 'ceil' : 'floor');
+  const decimalPlaces = getDecimalPlaces(symbol);
+	const newPrice = roundTo(
+    price * (1 + (isSell ? 1 : -1) * (MARGINS[symbol] || DEFAULT_MARGIN)), 
+    decimalPlaces, 
+    isSell ? 'ceil' : 'floor'
+  );
 	console.log("NEW PRICE!", newPrice);
 	return newPrice;
 }
