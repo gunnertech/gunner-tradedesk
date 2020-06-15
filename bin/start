@@ -54,9 +54,9 @@ function roundTo(n, digits, type) {
 	}
 	var multiplicator = Math.pow(10, digits);
 	n = parseFloat((n * multiplicator).toFixed(11));
-	n = (Math[type](n) / multiplicator).toFixed(8);
+	n = (Math[type](n) / multiplicator).toFixed(digits);
 	if( negative ) {    
-			n = (n * -1).toFixed(8);
+			n = (n * -1).toFixed(digits);
 	}
 	return n;
 }
@@ -87,18 +87,27 @@ const extractSourceTickerFromSymbol = symbol =>
 	// symbol.substr(3)
 
 const getSellQuantity = ({balance, quantity}) =>
-  quantity < balance ? (
-    parseFloat(quantity).toFixed(3)
-  ) : (
-    parseFloat(balance * 0.99).toFixed(3)
-  )
+	roundTo(
+		quantity < balance ? (
+			parseFloat(quantity)
+		) : (
+			parseFloat(balance * 0.99)
+		),
+		0,
+		'floor'
+	)
+  
 
 const getBuyQuantity = ({balance, quantity, price}) =>
-  price * quantity >= balance ? (
-    parseFloat(balance * 0.99 / price).toFixed(3)
-  ) : (
-    parseFloat(quantity).toFixed(3)
-  )
+	roundTo(
+		price * quantity >= balance ? (
+			parseFloat(balance * 0.99 / price)
+		) : (
+			parseFloat(quantity)
+		),
+		3,
+		'floor'
+	)
   
 
 const buy = ({price, quantity, symbol}) =>
