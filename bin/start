@@ -94,7 +94,7 @@ const getSellQuantity = ({balance, quantity}) =>
 		) : (
 			parseFloat(balance * 0.99)
 		),
-		0,
+		3,
 		'floor'
 	)
   
