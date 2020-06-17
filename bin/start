@@ -20,6 +20,7 @@ const DEFAULT_MARGIN = 0.004;
 
 const MARGINS = {
 	XRPBTC: 0.004,
+	ETHBTC: 0.002,
 	XVGBTC: 0.02
 }
 
